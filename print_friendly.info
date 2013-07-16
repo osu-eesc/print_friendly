@@ -1,0 +1,6 @@
+core = "7.x"
+description = "Adds a Print Friendly link to pages"
+name = "Print Friendly"
+package = "Other"
+project = "print_friendly"
+version = "7.x-1.1"
