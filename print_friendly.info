@@ -4,3 +4,4 @@ name = "Print Friendly"
 package = "Other"
 project = "print_friendly"
 version = "7.x-1.1"
+configure = admin/config/print-friendly
