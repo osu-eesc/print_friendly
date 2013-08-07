@@ -98,8 +98,14 @@ function print_friendly_views_post_execute(&$view) {
  * Implements hook_webform_submission_render_alter
 **/
 function print_friendly_webform_submission_render_alter(&$submission) {
-  $print_friendly_ebabled = variable_get('print_friendly_exclude_webform_results', FALSE);
-  if (!$print_friendly_ebabled) {
+  $print_friendly_exclude_webform_results = variable_get('print_friendly_exclude_webform_results', array());
+  if (in_array('webform-submission', $print_friendly_exclude_webform_results, TRUE)) {
+    $print_friendly_disabled = TRUE;
+  }
+  else {
+    $print_friendly_disabled = FALSE;
+  }
+  if (!$print_friendly_disabled) {
     if ($submission['#format'] == 'html') {
       $max_weight = 0;
       foreach ($submission as $submission_part) {
@@ -110,7 +116,7 @@ function print_friendly_webform_submission_render_alter(&$submission) {
         }
       }
       $submission['print_link'] = array(
-        '#markup' => l(t('Print-friendly version'), '#', array('attributes' => array('title' => t('Show a printer-friendly version of this page')))),
+        '#markup' => l(t('Print-friendly version'), request_path() . '/print', array('attributes' => array('title' => t('Show a printer-friendly version of this page')))),
         '#weight' => $max_weight + 1,
       );
     }
