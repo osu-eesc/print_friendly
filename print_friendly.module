@@ -43,9 +43,7 @@ function print_friendly_menu() {
  * Callback for the webform submission print friendly page
 **/
 function print_friendly_webform_submissions_print_page($node, $submission) {
-  dpm($node, 'node');
-  dpm($submission, 'submission');
-  return '';
+  return theme('print_friendly_webform_submission', array('node' => $node, 'submission' => $submission));
 }
 
 
@@ -237,15 +235,18 @@ function print_friendly_theme() {
   return array(
     'book_navigation' => array(
       'arguments' => array('book_link' => NULL),
-      'template' => 'theme/book-navigation',
+      'template' => 'book-navigation',
+      'path' => drupal_get_path('module', 'print_friendly') . '/theme',
     ),
     'book_export_html' => array(
       'arguments' => array('title' => NULL, 'contents' => NULL, 'depth' => NULL),
-      'template' => 'theme/book-export-html',
+      'template' => 'book-export-html',
+      'path' => drupal_get_path('module', 'print_friendly') . '/theme',
     ),
     'print_friendly_webform_submission' => array(
-      'arguments' => array('node' => NULL, 'submission' => NULL),
-      'template' => 'theme/print-friendly-webform_submission',
+      'variables' => array('node' => NULL, 'submission' => NULL),
+      'template' => 'print-friendly-webform_submission',
+      'path' => drupal_get_path('module', 'print_friendly') . '/theme',
     ),
   );
 }
