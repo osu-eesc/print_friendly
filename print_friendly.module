@@ -243,5 +243,9 @@ function print_friendly_theme() {
       'arguments' => array('title' => NULL, 'contents' => NULL, 'depth' => NULL),
       'template' => 'theme/book-export-html',
     ),
+    'print_friendly_webform_submission' => array(
+      'arguments' => array('node' => NULL, 'submission' => NULL),
+      'template' => 'theme/print-friendly-webform_submission',
+    ),
   );
 }
