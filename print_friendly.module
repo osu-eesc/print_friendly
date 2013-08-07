@@ -9,6 +9,10 @@ function print_friendly_permission() {
        'title' => t('Administer print friendly settings'),
        'description' => t('Perform administrative tasks for the print friendly module'),
     ),
+    'view print friendly webform submissions' => array(
+      'title' => t('View print friendly webform submissions'),
+      'description' => t('Allows the user to view webform submissions in a printer-friendly format')
+    ),
   );
 }
 
@@ -25,12 +29,53 @@ function print_friendly_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('print_friendly_admin_page'),
   );
+  $items['node/%print_friendly_nid/submission/%print_friendly_sid/print'] = array(
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('view print friendly webform submissions'),
+    'page callback' => 'print_friendly_webform_submissions_print_page',
+    'page arguments' => array(1, 3),
+  );
   return $items;
 }
 
 
 /**
- * Builds the admin page form for the print friendly module
+ * Callback for the webform submission print friendly page
+**/
+function print_friendly_webform_submissions_print_page($node, $submission) {
+  dpm($node, 'node');
+  dpm($submission, 'submission');
+  return '';
+}
+
+
+/**
+ * Menu loader callback. Load a webform node if the given nid is a webform.
+ */
+function print_friendly_nid_load($nid) {
+  if (!is_numeric($nid)) {
+    return FALSE;
+  }
+  $node = node_load($nid);
+  if (!isset($node->type) || !in_array($node->type, webform_variable_get('webform_node_types'))) {
+    return FALSE;
+  }
+  return $node;
+}
+
+
+/**
+ * Menu loader callback. Load a webform submission if the given sid is a valid.
+ */
+function print_friendly_sid_load($sid, $nid) {
+  module_load_include('inc', 'webform', 'includes/webform.submissions');
+  $submission = webform_get_submission($nid, $sid);
+  return empty($submission) ? FALSE : $submission;
+}
+
+
+/**
+ * Callback for the admin page form for the print friendly module
 **/
 function print_friendly_admin_page($form, &$form_state) {
 
@@ -75,9 +120,6 @@ function print_friendly_admin_page($form, &$form_state) {
     '#collapsible' => TRUE,
     '#collapsed' => FALSE,
   );
-
-
-
   // $fields = field_info_instances('node');
   return system_settings_form($form);
 }
@@ -105,7 +147,10 @@ function print_friendly_webform_submission_render_alter(&$submission) {
   else {
     $print_friendly_disabled = FALSE;
   }
-  if (!$print_friendly_disabled) {
+  $current_path = request_path();
+  $current_path_args = explode('/', $current_path);
+  $last_arg = array_pop($current_path_args);
+  if (!$print_friendly_disabled && $last_arg != 'print') {
     if ($submission['#format'] == 'html') {
       $max_weight = 0;
       foreach ($submission as $submission_part) {
