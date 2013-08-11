@@ -73,6 +73,70 @@ function print_friendly_sid_load($sid, $nid) {
 
 
 /**
+ * Implements hook_block_info().
+ */
+function print_friendly_block_info() {
+  $blocks = array(
+    'print_friendly_block' => array(
+      'info' => t('Print friendly page links'),
+      'cache' => DRUPAL_NO_CACHE,
+    ),
+  );
+  return $blocks;
+}
+
+
+/**
+ * Implements hook_block_view().
+ */
+function print_friendly_block_view($delta = '') {
+  $block = array();
+  switch ($delta) {
+    case 'print_friendly_block':
+      $menu_item = menu_get_item();
+      $print_friendly_enabled = FALSE;
+      switch ($menu_item['page_callback']) {
+        case 'node_page_view':
+          $node = $menu_item['page_arguments']['0'];
+          if (!in_array($node->type, variable_get('print_friendly_excluded_content_types', array()), TRUE)) {
+            $print_friendly_enabled = TRUE; 
+          }
+          break;
+        case 'views_page':
+          $view_name = $menu_item['page_arguments']['0'];
+          if (!in_array($view_name, variable_get('print_friendly_excluded_views', array()), TRUE)) {
+           $print_friendly_enabled = TRUE; 
+          }
+          break;
+        case 'webform_submission_page':
+          $print_friendly_exclude_webform_results = variable_get('print_friendly_exclude_webform_results', array());
+          if (!in_array('webform-submission', $print_friendly_exclude_webform_results, TRUE)) {
+            $print_friendly_enabled= TRUE;
+          }
+          break;
+      }
+      if ($print_friendly_enabled) {
+        if (drupal_is_front_page()) {
+          $current_path = '';
+        }
+        else {
+          $current_path= current_path();
+        }
+        if (strlen($current_path) == 0 || substr($current_path, -1) == '/') {
+          $url_path = $current_path . 'print';
+        }
+        else {
+          $url_path = $current_path . '/print';
+        }
+        $block['content'] = l(t('Print-friendly version'), $url_path, array('attributes' => array('title' => t('Show a printer-friendly version of this page')))); 
+      }
+      break;
+  }
+  return $block;
+}
+
+
+/**
  * Callback for the admin page form for the print friendly module
 **/
 function print_friendly_admin_page($form, &$form_state) {
@@ -134,37 +198,6 @@ function print_friendly_views_post_execute(&$view) {
 }
 
 
-/**
- * Implements hook_webform_submission_render_alter
-**/
-function print_friendly_webform_submission_render_alter(&$submission) {
-  $print_friendly_exclude_webform_results = variable_get('print_friendly_exclude_webform_results', array());
-  if (in_array('webform-submission', $print_friendly_exclude_webform_results, TRUE)) {
-    $print_friendly_disabled = TRUE;
-  }
-  else {
-    $print_friendly_disabled = FALSE;
-  }
-  $current_path = request_path();
-  $current_path_args = explode('/', $current_path);
-  $last_arg = array_pop($current_path_args);
-  if (!$print_friendly_disabled && $last_arg != 'print') {
-    if ($submission['#format'] == 'html') {
-      $max_weight = 0;
-      foreach ($submission as $submission_part) {
-        if (is_array($submission_part) && isset($submission_part['#weight'])) {
-          if ($submission_part['#weight'] > $max_weight) {
-            $max_weight = $submission_part['#weight'];
-          }
-        }
-      }
-      $submission['print_link'] = array(
-        '#markup' => l(t('Print-friendly version'), request_path() . '/print', array('attributes' => array('title' => t('Show a printer-friendly version of this page')))),
-        '#weight' => $max_weight + 1,
-      );
-    }
-  }
-}
 
 
 /**
@@ -194,7 +227,6 @@ function _print_friendly_insert_after_first_element(&$a, $element) {
 
 /**
  * Implements hook_node_view()
-**/
 function print_friendly_node_view($node, $view_mode, $langcode) {
   $disabled_types = array();
   $print_friendly_excluded_content_types = variable_get('print_friendly_excluded_content_types', array());
@@ -226,6 +258,7 @@ function print_friendly_node_view($node, $view_mode, $langcode) {
     unset($node->content['links']['book']['#links']['book_printer']);
   }
 }
+ */
 
 
 /**
